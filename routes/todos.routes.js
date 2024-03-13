@@ -1,10 +1,17 @@
 import { Router } from "express";
 import { MongoClient } from "mongodb";
+import dotenv from "dotenv";
+
+dotenv.config({path:['.env.local']});
 
 const router = Router();
-const url ='mongodb+srv://todo-api:7cUTfwDQxEI0DLiL@todo-app-api.3icpqut.mongodb.net/?retryWrites=true&w=majority&appName=Todo-APP-APi';
+
+const url = process.env.MONGO_URI;
+
                                     
 const client = new MongoClient(url);
+const todoDb = 'todo-db';
+const todoCollection ='todos';
 
 //define routes 
 router.post('/todos', async (req,res) => {
@@ -12,13 +19,18 @@ router.post('/todos', async (req,res) => {
     await client.connect();
 
     // Get access to todo database
-    const db = client.db('todo-db');
+    const db = client.db(todoDb);
 
     // Get access to todos collection
-    const collection = db.collection('todos');
+    const collection = db.collection(todoCollection);
 
     // Add to do document to todos collection
-    const result = await collection.insertOne(req.body);
+    const result = await collection.insertOne({
+        ...req.body,
+        isCompleted: false,
+        createdAt: new Date()
+    
+    });
 
     // Disconnect mongodb client
     await client.close();
@@ -27,7 +39,48 @@ router.post('/todos', async (req,res) => {
     res.json(result);
 });
 
+router.get('/todos', async (req,res) => {
+    //connect mongodb client
+    await client.connect();
+    
+  
+    // Get access to todo database
+    const db = client.db(todoDb);
 
+    // Get access to todos collection
+    const collection = db.collection(todoCollection);
+
+    // Find all todos collection
+    const limit = parseInt(req.query.limit) || 10;
+    const result = await collection.find({}).limit(limit).toArray();
+    
+    // Disconnect mongodb client
+    await client.close();
+
+    // Return response
+    res.send(result);
+});
+
+// delete todos
+router.delete('/todos', async (req,res) => {
+    //connect mongodb client
+    await client.connect();
+
+    // Get access to todo database
+    const db = client.db(todoDb);
+
+    // Get access to todos collection
+    const collection = db.collection(todoCollection);
+
+    // Add to do document to todos collection
+    const deleteResult = await collection.deleteMany({});
+
+    // Disconnect mongodb client
+    await client.close();
+
+    // Return response
+    res.json(deleteResult);
+});
 
 
 // Define routes
