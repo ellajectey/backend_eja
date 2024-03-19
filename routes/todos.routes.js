@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { MongoClient } from "mongodb";
 import dotenv from "dotenv";
+import Todo from "../models/todo";
 
 dotenv.config({path:['.env.local']});
 
@@ -12,6 +13,7 @@ const url = process.env.MONGO_URI;
 const client = new MongoClient(url);
 const todoDb = 'todo-db';
 const todoCollection ='todos';
+
 
 //define routes 
 router.post('/todos', async (req,res) => {
